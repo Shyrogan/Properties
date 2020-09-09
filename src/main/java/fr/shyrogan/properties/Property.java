@@ -1,8 +1,12 @@
 package fr.shyrogan.properties;
 
+import com.google.common.collect.ClassToInstanceMap;
+import com.google.common.collect.ImmutableClassToInstanceMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import fr.shyrogan.properties.group.Group;
+import fr.shyrogan.properties.constraint.Constraint;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -23,11 +27,16 @@ public class Property<T> extends Group {
         return new Builder<>();
     }
 
-    private T value;
+    private       T                  value;
+    private final ClassToInstanceMap<Constraint<T>> constraints;
 
-    public Property(String name, T defaultValue, Map<String, Group> child, Supplier<Boolean> displayCondition) {
+    public Property(
+            String name, T defaultValue, Map<String, Group> child,
+            ClassToInstanceMap<Constraint<T>> constraints, Supplier<Boolean> displayCondition
+    ) {
         super(name, child, displayCondition);
         this.value = defaultValue;
+        this.constraints = constraints;
     }
 
     /**
@@ -48,6 +57,29 @@ public class Property<T> extends Group {
     }
 
     /**
+     * @return The list of constraints applied to this property
+     */
+    public ClassToInstanceMap<Constraint<T>> getConstraints() {
+        return constraints;
+    }
+
+    /**
+     * @param constraintClass Constraint's class
+     * @return Whether this property has a constraint with specified type
+     */
+    public boolean has(Class<? extends Constraint<T>> constraintClass) {
+        return constraints.containsKey(constraintClass);
+    }
+
+    /**
+     * @param constraintClass Constraint's class
+     * @return The constraint instance based on its class
+     */
+    public Constraint<T> get(Class<? extends Constraint<T>> constraintClass) {
+        return constraints.get(constraintClass);
+    }
+
+    /**
      * @inheritDoc
      */
     @Override
@@ -60,12 +92,13 @@ public class Property<T> extends Group {
      * @param <T>
      */
     public static class Builder<T> {
-        private String                                          name;
-        private T                                               defaultValue;
-        private final ImmutableMap.Builder<String, Group>       child            = ImmutableMap.builder();
-        private Supplier<Boolean>                               displayCondition = DEFAULT_CONDITION;
+        private       String                                             name;
+        private       T                                                  defaultValue;
+        private final ImmutableMap.Builder<String, Group>                child            = ImmutableMap.builder();
+        private final ImmutableClassToInstanceMap.Builder<Constraint<T>> constraints      = ImmutableClassToInstanceMap.builder();
+        private       Supplier<Boolean>                                  displayCondition = DEFAULT_CONDITION;
 
-        protected Builder() {}
+        Builder() { }
 
         public Builder<T> name(String name) {
             this.name = name;
@@ -74,6 +107,12 @@ public class Property<T> extends Group {
 
         public Builder<T> defaultValue(T defaultValue) {
             this.defaultValue = defaultValue;
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public Builder<T> with(Constraint<T> constraint) {
+            constraints.put((Class<Constraint<T>>)constraint.getClass(), constraint);
             return this;
         }
 
@@ -92,6 +131,7 @@ public class Property<T> extends Group {
                     checkNotNull(name),
                     checkNotNull(defaultValue),
                     child.build(),
+                    constraints.build(),
                     checkNotNull(displayCondition)
             );
         }

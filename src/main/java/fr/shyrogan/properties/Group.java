@@ -1,7 +1,6 @@
-package fr.shyrogan.properties.group;
+package fr.shyrogan.properties;
 
 import com.google.common.collect.ImmutableMap;
-import fr.shyrogan.properties.Property;
 
 import java.util.Collections;
 import java.util.Map;

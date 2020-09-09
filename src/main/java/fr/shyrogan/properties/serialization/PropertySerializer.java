@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import fr.shyrogan.properties.Property;
-import fr.shyrogan.properties.group.Group;
+import fr.shyrogan.properties.Group;
 import fr.shyrogan.properties.serialization.gson.GroupSerializer;
 
 public interface PropertySerializer {
 
-    PropertySerializer INSTANCE = new Default();
+    PropertySerializer DEFAULT = new Default();
 
     /**
      * @param holder Holder instance
@@ -19,6 +19,8 @@ public interface PropertySerializer {
 
     /**
      * @param raw Saved text as raw
+     * @return A group recreation, keep in mind (if its a property) that constraints and display conditions
+     * are not serialized.
      */
     Group read(String raw);
 

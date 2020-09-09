@@ -1,10 +1,11 @@
 package fr.shyrogan.properties.serialization.gson;
 
+import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import fr.shyrogan.properties.Property;
-import fr.shyrogan.properties.group.Group;
+import fr.shyrogan.properties.Group;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public class GroupSerializer implements JsonSerializer<Group>, JsonDeserializer<
         return object;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public Group deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
         JsonObject object = element.getAsJsonObject();
@@ -59,7 +61,11 @@ public class GroupSerializer implements JsonSerializer<Group>, JsonDeserializer<
                     throw new RuntimeException("Cannot deserialize property \"" + name + "\" because class " + stringType + " cannot be found");
                 }
             }
-            return new Property<>(name, context.deserialize(valueE, TypeToken.get(propertyType).getType()), child.build(), Group.DEFAULT_CONDITION);
+            return new Property(
+                    name, context.deserialize(valueE, TypeToken.get(propertyType).getType()),
+                    child.build(),
+                    ImmutableClassToInstanceMap.builder().build(), Group.DEFAULT_CONDITION
+            );
         } else {
             return new Group(name, child.build(), Group.DEFAULT_CONDITION);
         }
